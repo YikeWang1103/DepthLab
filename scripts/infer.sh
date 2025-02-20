@@ -15,7 +15,8 @@ python infer.py  \
     --processing_res 768 \
     --normalize_scale 1 \
     --strength 0.8 \
-    --pretrained_model_name_or_path $pretrained_model_name_or_path --image_encoder_path $image_encoder_path \
+    --pretrained_model_name_or_path $pretrained_model_name_or_path \
+    --image_encoder_path $image_encoder_path \
     --denoising_unet_path $denoising_unet_path \
     --reference_unet_path $reference_unet_path \
     --mapping_path $mapping_path \

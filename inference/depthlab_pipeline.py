@@ -116,7 +116,7 @@ class DepthLabPipeline(DiffusionPipeline):
             clip_image.to(device, dtype=self.image_enc.dtype)
         ).image_embeds
         encoder_hidden_states = clip_image_embeds.unsqueeze(1)
-        encoder_hidden_states =self.mapping_layer(encoder_hidden_states )
+        encoder_hidden_states = self.mapping_layer(encoder_hidden_states )
         prompt = ""
         text_inputs =self.tokenizer(
             prompt,
@@ -237,7 +237,7 @@ class DepthLabPipeline(DiffusionPipeline):
         depth_pred_numpy_origin=depth_pred_numpy.copy()
         depth_pred_norm = (depth_pred_numpy - depth_pred_numpy.min()) / (depth_pred_numpy.max() - depth_pred_numpy.min())
         depth_pred_colored = colorize_depth_maps(
-            depth_pred_norm, 0, 1, cmap="Spectral"
+            depth_pred_norm, 0, 1, cmap="jet"
         ).squeeze()  # [3, H, W], value in (0, 1)
         depth_pred_colored = (depth_pred_colored * 255).astype(np.uint8)
         depth_pred_colored = Image.fromarray(chw2hwc(depth_pred_colored))
