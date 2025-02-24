@@ -160,6 +160,8 @@ class DepthLabTester:
                 # fill the sparse depth map by interpolation
                 if self.refine is False:
                     filled_gt_depth=get_filled_for_latents(gt_mask, gt_depth)
+                else:
+                    filled_gt_depth = gt_depth
 
                 filled_gt_depth_colormap = depth2colormap(filled_gt_depth, 10, 0.1, depth_cmap)
 
