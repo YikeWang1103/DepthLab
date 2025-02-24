@@ -86,6 +86,12 @@ class DepthLabTester:
 
         self.visual_folder = "visualization"
         self.pred_folder = "prediction"
+        self.hyper_list = "_" + str(hyper_param.denoise_steps) +  \
+                          "_" + str(hyper_param.processing_res) + \
+                          "_" + str(hyper_param.normalize_scale) + \
+                          "_" + str(hyper_param.strength) + \
+                          "_" + str(hyper_param.blend) + \
+                          "_" + str(refine) + "_"
 
         # output_folder = "inference_results"
         # self.output_folder_path = os.path.join(self.output_path, output_folder)
@@ -110,11 +116,14 @@ class DepthLabTester:
             seq_path_input_depth = os.path.join(seq_path, "input_depth")
             seq_path_input_rgb = os.path.join(seq_path, "input_rgb_0")
 
+            # create the output folder for the sequence
+            output_folder_path = os.path.join(seq_path, self.hyper_list)
+            os.makedirs(output_folder_path, exist_ok=True)
 
-            visual_folder_path = os.path.join(seq_path, self.visual_folder)
+            visual_folder_path = os.path.join(output_folder_path, self.visual_folder)
             os.makedirs(visual_folder_path, exist_ok=True)
 
-            pred_folder_path = os.path.join(seq_path, self.pred_folder)
+            pred_folder_path = os.path.join(output_folder_path, self.pred_folder)
             os.makedirs(pred_folder_path, exist_ok=True)
 
             gt_depth_files = glob(os.path.join(seq_path_gt_depth, "*.{}".format("bin")))
