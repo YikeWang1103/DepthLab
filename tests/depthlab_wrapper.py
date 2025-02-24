@@ -115,7 +115,7 @@ class DepthLabWrapper:
                              match_input_res = True,
                              batch_size =1,
                              color_map = "Spectral",
-                             show_progress_bar = True,
+                             show_progress_bar = False,
                              depth_numpy_origin = depth_numpy,
                              mask_origin = mask,
                              guidance_scale = 1,

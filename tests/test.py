@@ -15,7 +15,6 @@ colors = ['blue', 'white', 'red']
 # 创建自定义 colormap
 cmap = LinearSegmentedColormap.from_list('depth_error', colors, N=256)
 
-
 # 获取当前工作目录
 current_dir = os.getcwd()
 
