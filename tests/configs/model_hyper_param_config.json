@@ -2,13 +2,12 @@
     "denoise_steps": 50,
     "processing_res": 640,
     "normalize_scale": 1.0,
-    "strength": 1,
+    "strength": 0.8,
     "seed": 1234,
     "pretrained_model_name_or_path": "./checkpoints/marigold-depth-v1-0",
     "image_encoder_path": "./checkpoints/CLIP-ViT-H-14-laion2B-s32B-b79K",
     "denoising_unet_path": "./checkpoints/DepthLab/denoising_unet.pth",
     "reference_unet_path": "./checkpoints/DepthLab/reference_unet.pth",
     "mapping_path": "./checkpoints/DepthLab/mapping_layer.pth",
-    "blend": true,
-    "refine": true
+    "blend": true
 }

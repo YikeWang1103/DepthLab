@@ -76,22 +76,24 @@ def calculate_rel_err_in_depth(gt_depth, pred_depth, gt_pixels):
 
 
 class DepthLabTester:
-    def __init__(self, dumped_path, sensor_calib, hyper_param, model_wrapper, output_path, refine):
+    def __init__(self, dumped_path, sensor_calib, hyper_param, model_wrapper, output_path, refine, use_depth_mask):
         self.dumped_path = dumped_path
         self.sensor_calib = sensor_calib
         self.hyper_param = hyper_param
         self.model_wrapper = model_wrapper
         self.output_path = output_path
         self.refine = refine
+        self.use_depth_mask = use_depth_mask
 
         self.visual_folder = "visualization"
         self.pred_folder = "prediction"
-        self.hyper_list = "_" + str(hyper_param.denoise_steps) +  \
+        self.hyper_list = str(hyper_param.denoise_steps) +  \
                           "_" + str(hyper_param.processing_res) + \
                           "_" + str(hyper_param.normalize_scale) + \
                           "_" + str(hyper_param.strength) + \
                           "_" + str(hyper_param.blend) + \
-                          "_" + str(refine) + "_"
+                          "_" + str(refine) + \
+                          "_" + str(use_depth_mask)
 
         # output_folder = "inference_results"
         # self.output_folder_path = os.path.join(self.output_path, output_folder)
@@ -105,6 +107,8 @@ class DepthLabTester:
         # for each sequence in the dumped path, load the files in each sequence and evaluate the model
         sequences = os.listdir(self.dumped_path)
         sequences.sort()
+
+        print(f"sequences: {sequences}")
         
         seqs_bar = tqdm(sequences, desc="Sequences", leave=False)
 
@@ -115,9 +119,10 @@ class DepthLabTester:
             seq_path_pred_depth = os.path.join(seq_path, "pred_depth")
             seq_path_input_depth = os.path.join(seq_path, "input_depth")
             seq_path_input_rgb = os.path.join(seq_path, "input_rgb_0")
+            seq_path_depth_mask = os.path.join(seq_path, "sky_mask_in_depth/mask")
 
             # create the output folder for the sequence
-            output_folder_path = os.path.join(seq_path, self.hyper_list)
+            output_folder_path = os.path.join(seq_path, 'depth_completion', self.hyper_list)
             os.makedirs(output_folder_path, exist_ok=True)
 
             visual_folder_path = os.path.join(output_folder_path, self.visual_folder)
@@ -129,21 +134,24 @@ class DepthLabTester:
             gt_depth_files = glob(os.path.join(seq_path_gt_depth, "*.{}".format("bin")))
             input_depth_files = glob(os.path.join(seq_path_input_depth, "*.{}".format("png")))
             input_rgb_files = glob(os.path.join(seq_path_input_rgb, "*.{}".format("png")))
+            depth_mask_files = glob(os.path.join(seq_path_depth_mask, "*.{}".format("npy"))) 
 
             gt_depth_files.sort()
             input_depth_files.sort()
             input_rgb_files.sort()
+            depth_mask_files.sort()
 
-            files_bar = tqdm(zip(gt_depth_files, input_depth_files, input_rgb_files), 
+            files_bar = tqdm(zip(gt_depth_files, input_rgb_files, depth_mask_files), 
                              total=len(gt_depth_files),
                              desc=" " * 2 + "Frames", 
                              leave=False)
 
-            for gt_depth_file, input_depth_file, input_rgb_file in files_bar:
+            for gt_depth_file, input_rgb_file, depth_mask_file in files_bar:
                 # load input data
                 input_rgb = Image.open(input_rgb_file)
                 rgb_image = cv2.imread(input_rgb_file)
                 gt_depth = np.fromfile(gt_depth_file, dtype=np.float32).reshape(int(self.sensor_calib.RESOLUTION[1]), int(self.sensor_calib.RESOLUTION[0]))
+                depth_mask = np.load(depth_mask_file)
 
                 # convert gt depth into colormap
                 gt_colormap = depth2colormap(gt_depth, 10, 0.1, depth_cmap)
@@ -160,8 +168,11 @@ class DepthLabTester:
                 # fill the sparse depth map by interpolation
                 if self.refine is False:
                     filled_gt_depth=get_filled_for_latents(gt_mask, gt_depth)
-                else:
-                    filled_gt_depth = gt_depth
+
+
+                # set the sky depth in the filled_gt_depth to be 10
+                if self.use_depth_mask:
+                    filled_gt_depth[depth_mask==1] = 10
 
                 filled_gt_depth_colormap = depth2colormap(filled_gt_depth, 10, 0.1, depth_cmap)
 
@@ -174,7 +185,7 @@ class DepthLabTester:
 
                 # calculate relative error in depth
                 rel_err_arr, rel_err_pixels = calculate_rel_err_in_depth(gt_depth, depth_pred, gt_pixels)
-                rel_err_colormap = depth2colormap(rel_err_arr, 0.1, -0.1, err_cmap)
+                rel_err_colormap = depth2colormap(rel_err_arr, 0.2, -0.2, err_cmap)
                 rel_err_projection_rgb = colormap2rgb(rgb_image, rel_err_colormap, gt_pixels)
 
                 # stitch and save images
@@ -188,7 +199,7 @@ class DepthLabTester:
 
                 pred_check = np.fromfile(os.path.join(pred_folder_path, input_rgb_file.split('/')[-1].replace('.png', '.bin')))
 
-                print(f"max. value in depth_pred: {np.max(depth_pred)}")
-                print(f"max.value in gt_depth: {np.max(gt_depth)}")
+                # print(f"max. value in depth_pred: {np.max(depth_pred)}")
+                # print(f"max.value in gt_depth: {np.max(gt_depth)}")
 
 

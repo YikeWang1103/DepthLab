@@ -41,14 +41,21 @@ def arg_parse():
     )
 
     parser.add_argument(
+        '--output_path', type=str, required=True
+    )
+
+    parser.add_argument(
         '--refine',
         action="store_true",
         help="Whether or not to use gradient checkpointing to save memory at the expense of slower backward pass.",
     )
 
     parser.add_argument(
-        '--output_path', type=str, required=True
+        '--use_depth_mask',
+        action="store_true",
+        help="Whether or not to use depth_mask for the sky depth estimation.",
     )
+
 
     args = parser.parse_args()
     return args
@@ -114,7 +121,8 @@ if __name__ == '__main__':
                             hyper_param, 
                             model_wrapper, 
                             args.output_path,
-                            args.refine)
+                            args.refine,
+                            args.use_depth_mask)
 
     tester.eval()
 
