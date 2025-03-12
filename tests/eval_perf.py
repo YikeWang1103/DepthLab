@@ -26,11 +26,6 @@ if current_dir not in sys.path:
 from tests.depthlab_wrapper import *
 from tests.tester import *
 
-cpu_count = os.cpu_count()
-print(f'当前 CPU 核心数量: {cpu_count}')
-
-num_processor = 1
-
 def arg_parse():
     parser = argparse.ArgumentParser(
         description="Performance evaluation of DepthLab based on Fusionride datasets!"
@@ -44,6 +39,7 @@ def arg_parse():
     parser.add_argument('--model_hyper_param_config', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
     parser.add_argument('--max_range', type=float, required=True)
+    parser.add_argument('--num_multi_process', type=int, required=True)
     parser.add_argument('--refine', action="store_true", help="Whether or not to use gradient checkpointing to save memory at the expense of slower backward pass.",)
     parser.add_argument('--use_geometric_mask', action="store_true", help="Whether or not to use depth_mask for the sky depth estimation.",)
     parser.add_argument('--use_semantic_mask', action="store_true", help="Whether or not to use depth_mask for the sky depth estimation.",)
@@ -123,10 +119,10 @@ if __name__ == '__main__':
         tester.run()
     elif args.process_mode == "post-processing":
         def worker(i):
-            return tester.refine_with_sky_mask(i, num_processor)  # 定义工作函数
+            return tester.refine_with_sky_mask(i, args.num_multi_process)  # 定义工作函数
 
-        with Pool(processes=num_processor) as pool:  # 创建进程池
-            pool.map(worker, range(num_processor))  # 并行执行任务
+        with Pool(processes=args.num_multi_process) as pool:  # 创建进程池
+            pool.map(worker, range(args.num_multi_process))  # 并行执行任务
     else:
         assert args.process_mode in ["inference", "post-processing"], "Invalid process mode. Choose either 'inference' or 'post-processing'."
 
